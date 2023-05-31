@@ -169,9 +169,10 @@ class Claim(viewsets.ModelViewSet):
         policy = Policy.objects.get(id=policy_id)
         policy_serializer = PolicySerializer(policy)
         pk = policy_serializer.data['user']
-        path_user_id = kwargs.get('profile_pk')
+        user = UserDetailView.get_object(serializer, pk)
+
         try:
-            if path_user_id != pk:
+            if user.id != pk:
                 raise Exception("user doesn't have the required policy")
 
             user = UserDetailView.get_object(serializer, pk)
