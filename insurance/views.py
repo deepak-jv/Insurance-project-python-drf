@@ -16,6 +16,25 @@ class PolicyViewSet(viewsets.ModelViewSet):
     serializer_class = PolicySerializer
     renderer_classes = [UserRenderer]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        created_instance = serializer.instance
+        serialized_data = serializer.data
+
+        serialized_data['User'] = {
+            'id': created_instance.user.id,
+            'email': created_instance.user.email,
+            'name': created_instance.user.name,
+            'role': created_instance.user.role,
+            'mob_num': created_instance.user.mob_num
+        }
+        serialized_data['message'] = {
+            'success': True
+        }
+        return Response(serialized_data, status=status.HTTP_201_CREATED)
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
@@ -51,7 +70,7 @@ class PolicyViewSet(viewsets.ModelViewSet):
             user = UserDetailView.get_object(serializer, pk)
             user = UserProfileSerializer(user)
 
-            response_data = super(PolicyViewSet, self).list(request, *args, **kwargs)
+            # response_data = super(PolicyViewSet, self).list(request, *args, **kwargs)
 
             data = {
                 "message": "Success",
@@ -78,6 +97,31 @@ class Claim(viewsets.ModelViewSet):
     permission_classes = [CustomPermission]
     queryset = Claim.objects.all()
     serializer_class = ClaimSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        serializer_instance = serializer.instance
+        serializer_data = serializer.data
+
+        serializer_data['policy'] = {
+            'id': serializer_instance.policy.id,
+            'name': serializer_instance.policy.name,
+            'description': serializer_instance.policy.description,
+            'user': {
+                'id': serializer_instance.policy.user.id,
+                'email': serializer_instance.policy.user.email,
+                'name': serializer_instance.policy.user.name,
+                'role': serializer_instance.policy.user.role,
+                'mob_num': serializer_instance.policy.user.mob_num
+            }
+        }
+        serializer_data['message'] = {
+            'success': True
+        }
+
+        return Response(serializer_data, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
